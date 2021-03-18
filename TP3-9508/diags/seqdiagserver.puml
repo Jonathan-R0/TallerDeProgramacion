@@ -1,0 +1,61 @@
+@startuml Diagrama de Secuencia, TP3.
+actor main
+activate main
+
+main -> ":Aceptador"**: <<create>>
+main -> ":Aceptador": start
+":Aceptador" -> "server socket"**: <<create, bind and listen>>
+activate ":Aceptador"
+
+loop "for each client to be accepted && cin != 'q'"
+
+  ":Aceptador" -> "server socket": accept
+  ":Aceptador" -> ":Clienthandler"**: <<create>>
+  ":Clienthandler" -> "client socket"**: <<create>>
+  ":Aceptador" -> ":Clienthandler": run
+  activate ":Clienthandler"
+
+  ":Clienthandler" -> infomanager**: <<create>>
+  ":Clienthandler" -> parse**: <<create>>
+
+  ":Clienthandler" -> infomanager: recvInfo()
+  activate infomanager
+  infomanager -> "client socket": recv
+  activate "client socket"
+  return read
+  deactivate infomanager
+
+  ":Clienthandler" -> parse: op(msg)
+  ":Clienthandler" -> responsegenerator**: <<create>>
+  ":Clienthandler" -> responsegenerator: generate()
+  activate responsegenerator
+  return answer
+
+  ":Clienthandler" -> infomanager: sendInfo()
+  activate infomanager
+
+  infomanager -> "client socket": send
+  activate  "client socket"
+  deactivate  "client socket"
+
+  deactivate infomanager
+  deactivate parse
+  deactivate ":Clienthandler"
+
+  ":Clienthandler" -> ":Clienthandler": removeDeadClients()
+  activate ":Clienthandler"
+  
+  loop "for each client saved"
+    alt "if client can be removed" 
+      ":Clienthandler" -> ":Clienthandler": join() && delete
+    else "continue"
+    end
+  end
+
+  deactivate ":Clienthandler"
+
+end
+
+deactivate ":Aceptador"
+deactivate main
+@enduml

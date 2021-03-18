@@ -1,0 +1,71 @@
+@startuml
+class eBPF{
+-init()
++run()
++restart()
++hasCycle()
++hasUnusedInstruction()
+}
+
+class asmline{
+-<string> opcode
+-<string> label
+-list<string> labelsToJump
+-list<string> jumpCodes
++setLabelsToJump()
++esCortante()
+}
+
+class fileFountain{
+-vector<string> files
+-<mutex> lock
++getNext()
+}
+
+class graph{
+-map<int,list<int>> nodes
++addVertex()
++addEdge()
++isCyclic()
++hasUnusedInstructions()
++connectLast()
++disconnectLast()
+}
+
+class graphFiller{
+-map<string,list<int>> referenciasColgadas
+-map<string,int> referenciasReconocidas
+-list<int> aristaACortar
++restart()
++connectLostTags()
++hasCycle()
++hasUnusedInstruction()
+}
+
+class parser{
+-list<char> delims
++parseInstruction()
+}
+
+class results{
+-vector<string> operations
+-<mutex> lock
++addResults()
++printResults()
+}
+
+abstract class thread{
++join()
+{abstract} +run()
++start()
+}
+
+graphFiller --> asmline
+graphFiller --> graph
+graphFiller o-- parser
+parser ..> asmline
+eBPF --|> thread
+eBPF *-- results
+eBPF *-- fileFountain
+eBPF o-- graphFiller
+@enduml

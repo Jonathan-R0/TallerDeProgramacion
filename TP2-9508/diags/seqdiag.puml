@@ -1,0 +1,6 @@
+@startuml
+
+actor "user"
+user -> eBPF: "files"
+
+@enduml

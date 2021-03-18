@@ -1,0 +1,82 @@
+@startuml Diagrama de Clases, TP3.
+left to right direction
+
+package "Common" as P2{
+	class Infomanager{
+		+recvInfo()
+		+sendInfo()
+		+sendInfoFromStdin()
+	}
+
+	class Socket{
+		+socket_send()
+		+socket_recv()
+		+socket_accept()
+		+socket_bind()
+		+socket_listen(queueSize)
+		+socket_connect(port,ip)
+		#get_addr_info()
+	}
+}
+
+package "Client" as P1{
+	class Clientmanager{
+		-socket
+		+start()
+	}
+}
+
+package "Server" as P3{
+
+	class ReferenceFountain{
+		-map<string:string> references
+		-mutex
+		+getReferenceFrom(key)
+		+setReferenceTo(key,value)
+	}
+
+	abstract class Thread{
+		+join()
+		{abstract} +run()
+		+start()
+	}
+
+	class Clienthandler{
+		-bool isDeadB
+		-socket
+		-Referencefountain refs
+		+isDead()
+	}
+
+	abstract class Response{
+		{static} +create(parser)
+		{abstract} +generate(parser,msg)
+	}
+
+	class GetAnswer{}
+	class PostAnswer{}
+	class InvalidAnswer{}
+
+	class Aceptador{
+		-Referencefountain references
+		-list<Clienthandler*> clientlist
+		-socket
+		+removeDeadClients()
+	}
+
+}
+
+GetAnswer --|> Response
+PostAnswer --|> Response
+InvalidAnswer --|> Response
+Aceptador --|> Thread
+Clienthandler --|> Thread
+Aceptador *-- Socket
+Clienthandler *-- Socket
+Clienthandler --> Infomanager
+Clientmanager --> Infomanager
+Infomanager ..> Socket
+Clienthandler --> Response
+Aceptador *-- Clienthandler
+Aceptador *-- ReferenceFountain
+@enduml

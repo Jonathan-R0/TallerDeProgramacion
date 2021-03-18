@@ -1,0 +1,31 @@
+@startuml Diagrama de Secuencia, TP3.
+
+actor user
+activate user
+
+user -> ":Clientmanager"**: <<create>>
+user -> ":Clientmanager": start
+":Clientmanager" -> "client socket"**: <<create and connect>>
+activate ":Clientmanager"
+
+":Clientmanager" -> infomanager**: <<create>>
+
+":Clientmanager" -> infomanager: sendInfoFromStdin
+activate infomanager
+infomanager -> infomanager: getline(cin,buf)
+infomanager -> "client socket": send
+activate "client socket"
+return sent
+deactivate infomanager
+
+":Clientmanager" -> infomanager: recvinfo
+activate infomanager
+infomanager -> "client socket": recv
+activate "client socket"
+return read
+deactivate infomanager
+
+deactivate ":Clientmanager"
+deactivate user
+
+@enduml

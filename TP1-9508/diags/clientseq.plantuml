@@ -1,0 +1,41 @@
+@startuml
+autoactivate on
+
+actor cliente
+cliente -> arginfo** : <<init>>
+activate arginfo
+arginfo -> arginfo : gerMethodAndKey
+deactivate arginfo
+arginfo -> arginfo: getPortAndIp
+deactivate arginfo
+return validez
+
+cliente -> client_tda**: <<init>>
+client_tda -> socket**: <<init>>
+cliente -> client_tda: client_connect
+client_tda -> socket: connect
+return validez
+return validez
+
+cliente -> cliente: cipher_and_send
+
+cliente -> client_cipherAndSend: cipher_and_send_rc4
+client_cipherAndSend -> rc4**: <<init>>
+
+loop mientras pueda leer de stdin
+  client_cipherAndSend -> file_reader: read_from_file_to_buf
+  return bytes_read
+  client_cipherAndSend -> rc4: encode
+  return validez
+  client_cipherAndSend -> socket: socket_send
+  return bytes_sent
+end
+  
+return validez
+return validez
+
+
+deactivate cliente
+cliente-> client_tda: destroy
+deactivate client_tda
+@enduml

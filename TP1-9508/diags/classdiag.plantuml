@@ -1,0 +1,106 @@
+@startuml
+	
+class client_main{
+	+arginfo: arginfo_t
+	+self: client_t
+	#cipher_and_send()
+}
+	
+class server_main{
+	+arginfo: arginfo_t
+	+self: server_t
+	#decipher_and_recv()
+}
+	
+class client_cipherAndSend{
+	+cipher
+	+cipher_and_send_cesar()
+	+cipher_and_send_vigenere()
+	+cipher_and_send_rc4()
+}
+	
+class server_decipherAndRecv{
+	+decipher
+	+decipher_and_recv_cesar()
+	+decipher_and_recv_vigenere()
+	+decipher_and_recv_rc4()
+}
+	
+class arginfo{
+	+arginfo_init()
+	+getMethodAndKey()
+	+getPortAndIp()
+	#metodoEsValido()
+}
+	
+class socket{
+	+socket_init()
+	+socket_destroy()
+	+socket_accept()
+	+socket_connect()
+	+socket_bind()
+	+socket_listen()
+	+socket_send()
+	+socket_recv()
+	#get_addr_info()
+}
+
+class file_reader{
+	+read_from_file_to_buf()
+}
+	
+class server_tda{
+	+server_init()
+	+server_destroy()
+	+server_connect()
+	+server_recv()
+}
+	
+class client_tda{
+	+client_init()
+	+client_destroy()
+	+client_connect()
+	+client_send()
+}
+	
+class cesar{
+	+cesar_init()
+	+cesar_encode()
+	+cesar_decode()
+	#shift_bytes()
+}
+	
+class rc4{
+	+rc4_init()
+	+rc4_encode()
+	+rc4_decode()
+	#swap_chars()
+	#randChar()
+}
+	
+class vigenere{
+	+vigenere_init()
+	+vigenere_encode()
+	+vigenere_decode()
+	#shift_bytes()
+}
+	
+client_main --> client_cipherAndSend
+client_cipherAndSend ..> client_tda
+server_main --> server_decipherAndRecv
+server_decipherAndRecv ..> server_tda
+client_main *-- arginfo
+server_main *-- arginfo
+
+client_cipherAndSend --> cesar
+client_cipherAndSend --> rc4
+client_cipherAndSend --> vigenere
+client_cipherAndSend --o file_reader
+
+server_decipherAndRecv --> cesar
+server_decipherAndRecv --> rc4
+server_decipherAndRecv --> vigenere
+
+client_tda ..> socket
+server_tda ..> socket
+@enduml

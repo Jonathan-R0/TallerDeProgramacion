@@ -1,0 +1,39 @@
+@startuml
+autoactivate on
+
+actor servidor
+servidor -> arginfo** : <<init>>
+activate arginfo
+arginfo -> arginfo : gerMethodAndKey
+deactivate arginfo
+arginfo -> arginfo: getPortAndIp
+deactivate arginfo
+return validez
+
+servidor -> server_tda**: <<init>>
+server_tda -> socket**: <<init>>
+servidor -> server_tda: server_connect
+
+server_tda -> socket: bind, listen, accept
+return validez
+
+servidor -> servidor: decipher_and_recv
+servidor -> server_decipherAndRecv: decipher_and_recv_rc4
+server_decipherAndRecv -> rc4**: <<init>>
+
+loop mientras el servidor reciba datos
+  server_decipherAndRecv -> server_tda: server_recv
+  server_tda -> socket: socket_recv
+  return bytes_read
+  return leidos
+  server_decipherAndRecv -> rc4: decode
+  return validez
+end
+return validez
+
+
+deactivate servidor
+deactivate server_tda
+servidor -> server_tda: destroy
+deactivate server_tda
+@enduml
