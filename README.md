@@ -3,6 +3,17 @@
 
 Este resumen junta información relevante dictada durante las clases para la preparación del final. Ante algún error que se pueda detectar en este archivo, por favor mencionarlo.
 
+# Tabla de Contenidos
+
+- [Clase 1](#clase-1)
+- [Clase 2](#clase-2)
+- [Clase 3](#clase-3)
+- [Clase 4](#clase-4)
+- [Clase 5](#clase-5)
+- [Clase 6](#clase-6)
+- [Clase 7](#clase-7)
+
+
 # Clase 1
 
 ## Memoria
@@ -153,6 +164,14 @@ Los modos de apertura de archivos en C son los siguientes:
 - `a+`: Lectura y escritura al final del mismo.
 - `b`: Para que se trabajen sobre archivos binarios.
 - `t`: Para archivos de texto.
+
+# Clase 3
+
+# Clase 4
+
+# Clase 5
+
+# Clase 6
 
 # Clase 7
 
