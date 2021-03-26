@@ -1,4 +1,4 @@
-# Taller de Programación, Resumen para el Final.
+# [Taller de Programación, Resumen para el Final.](https://jonathan-r0.github.io/taller.html)
 ## Cátedra Veiga, 2C 2020. 
 
 Este resumen junta información relevante dictada durante las clases para la preparación del final. Ante algún error que se pueda detectar en este archivo, por favor mencionarlo.
