@@ -167,6 +167,30 @@ Los modos de apertura de archivos en C son los siguientes:
 
 # Clase 3
 
+## RAII
+
+Resource Acquisition is Initialization (RAII) es un patrón de programación donde se acostumbra a pedir los recursos necesarios al sistema operativo en el constructor de un objeto y devolverlos en su destructor. Para hacer esto correctamente debemos asegurarnos que los constructores y destructores se llamen siempre para cada objeto que queremos crear, para así evitar inconsistencias con la forma de manejar recursos y evitar errores.
+
+## Pasajes de Objetos en C++
+
+Tenemos cuatro formas de pasar objetos como parámetros en C++:
+
+```
+void A(Class obj);
+void B(Class* obj);
+void C(Class& obj);
+void D(Class&& obj);
+```
+- `A` recibe por copia, es decir, al scope de A entra como obj una copia la instancia de Class que haya sido pasada por parámetro. Esto es ***peligroso*** pues si pasamos un objeto por copia que respeta RAII a un scope y este se destruye al salir del mismo (pues si un objeto sale de un scope en C++ se destruye automáticamente), podemos perder algún dato dinámico que podríamos querer usar en un futuro. Otro ejemplo peligroso es el de recibir una matriz por copia; esto podría afectar fuertemente a la performance del programa.
+
+- `B` recibe por puntero, es decir, al scope entra la dirección de memoria donde existe el objeto. Siempre pesa que lo que pesa un puntero y evita llamadas innecesarias al destructor.
+
+- `C` pasa por referencia
+
+- `D` pasa por movimiento
+
+## POO en C++
+
 # Clase 4
 
 # Clase 5
