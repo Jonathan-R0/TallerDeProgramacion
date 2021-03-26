@@ -153,3 +153,76 @@ Los modos de apertura de archivos en C son los siguientes:
 - `a+`: Lectura y escritura al final del mismo.
 - `b`: Para que se trabajen sobre archivos binarios.
 - `t`: Para archivos de texto.
+
+# Clase 7
+
+## SDL
+
+Un programa que inicializa una ventana es la siguiente:
+
+```
+int main(int argc, char* argv[]) {
+  SDL_INIT(SDL_INIT_VIDEO);
+  SDL_Window* window;
+  SDL_Renderer* renderer;
+  SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, SDL_RENDERER_ACCELERATED, &window, &renderer);
+  SDL_Event event;
+
+  bool running = true;
+  while (running) {
+    while (SDL_PollEvent(&event)) {
+      if (event.type == SDL_QUIT) running = false;
+    }
+    doCoolStuff(window, renderer);
+  }
+
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+
+  return 0;
+}
+```
+
+Podemos utilizar funciones como [`SDL_GetWindowSize`](https://wiki.libsdl.org/SDL_GetWindowSize), [`SDL_SetRenderDrawColor`](https://wiki.libsdl.org/SDL_SetRenderDrawColor), [`SDL_DrawLine`](https://wiki.libsdl.org/SDL_DrawLine), [`SDL_RenderClear`](https://wiki.libsdl.org/SDL_RenderClear) y [`SDL_RenderPresent`](https://wiki.libsdl.org/SDL_RenderPresent).
+
+# Clase 8
+
+## Namespaces
+
+Nos permite diferenciar instancias y variables. Por ejemplo:
+
+```
+namespace Black {
+  class Cat { ... }
+}
+
+namespace Orange {
+  class Cat { ... }
+}
+```
+
+Nos permite diferenciar entre `Black::Cat` y `Orange::Cat`.
+
+Si un namespace es anónimo, cualquier instancia de lo que se encuentre adentro del mismo podrá existir en el módulo en que se lo definió. Eso permite generar una funcionalidad similar a la de _static_.
+
+La keyword `using`, al utilizarla con namespaces nos permite obviar la mención de estos en nustros módulo de código. 
+
+## Friendship
+
+Nos permite acceder a atributos privados de nuestros "amigos". No se hereda. Un buen ejemplo está en el siguiente código, donde implementamos un método que nos permite imprimir los valores de nuestra clase Stack, sin tener getters.
+
+```
+class Stack {
+  ...
+  friend std::ostream& operator<< (std::ostream& stream, const Stack& stack) {
+    stream << "[";
+    int len = stack.buffer.size();
+    for (int i = 0; i < len; i++) {
+      stream << stack.buffer[i];
+    }
+    stream << "]";
+    return stream;
+  }
+}
+```
