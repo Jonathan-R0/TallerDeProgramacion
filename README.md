@@ -1,7 +1,7 @@
 # Taller de Programación, Resumen para el Final.
 ## Cátedra Veiga, 2C 2020. 
 
-Este resumen intenta juntar información relevante dictada durante las clases para la preparación del final. Ante algún error que se pueda detectar en este archivo, por favor mencionarlo.
+Este resumen junta información relevante dictada durante las clases para la preparación del final. Ante algún error que se pueda detectar en este archivo, por favor mencionarlo.
 
 # Clase 1
 
@@ -102,3 +102,54 @@ El proceso de compilación tiene varias etapas:
 ***Compilación***: Verificación del código suministrado. Genera un código objeto. Los `.c` que reciben se transforman en `.o` & `.lib`.
 
 ***Link-Edición***: Combina los distintos códigos objetos, librerías externas, resuelve problemas de referencias cruzadas y genera el ejecutable correspondiente a la plataforma en la que se realiza esto. Para generar un ejecutable más pequeño se puede realizar un *linkeo dinámico*. Esto consiste de linkear código objeto ya pregenerado que es usado por varios programas. Estas librerias dinámicas se encuentran una vez en la memoria del sistema y permite ahorrar memoria. Puede correr más rápido si este código ya está cacheado por otro programa que lo utilizó hace relativamente poco.
+
+# Clase 2
+
+## [Sockets](https://raw.githubusercontent.com/Jonathan-R0/TallerDeProgramacion/master/TP1-9508/common_socket.c)
+
+Siempre que se mande un mensaje por red, al destinatario del mismo se lo apoda `host`. Todo mensaje necesita conocer la ip y puerto de quien va a recibirlo. Para modelar la ip existen los protocolos iPv4 (codifica la ip con 4 bytes) e iPv6 (codifica la ip con 16 bytes).
+
+El server hace un bind de su socket a su ip local (resultado de getaddrinfo) y le podemos decir al socket que escuche a una cierta cantidad de conexiones entrantes, a través de [`listen`](https://man7.org/linux/man-pages/man2/listen.2.html) por el sistema operativo. A este socket le pueden llegar conexiones que puede aceptar o no, y hasta entonces bloqueará la ejecución del programa.
+
+Del lado del cliente creamos un socket que utilizamos para conectarnos con el servidor utilizando [`connect`](https://man7.org/linux/man-pages/man2/connect.2.html) hacia la dirección dada (obtenida con el [`getaddrinfo`](https://man7.org/linux/man-pages/man3/getaddrinfo.3.html)). Se manda el mensaje de conexión y se acepta, estableciendo la misma.
+
+El servidor crea un segundo socket asociado al puerto y es el que acepta conexiones. Necesito uno de estos sockets extras por cada cliente con el que trabajo. Si llegan más pedidos que espacios en la pila, estos se pierden.
+
+Para cerrar un canal de comunicación, lectura y/o escritura, se utiliza el [`shutdown`](https://man7.org/linux/man-pages/man2/shutdown.2.html).
+
+### Protocolo TPC
+
+Envia bytes, nunca streams. Además asegura que siempre llega la información sin bytes repetidos y respetando el orden de salida. 
+
+Para satisfacer el protocolo correctamente debemos utilizar sockets, los cuales están diferenciados por su file descriptor. 
+
+## Manejo de Archivos
+
+Para manejar archivos en C podemos hacer principalmente dos cosas. Operamos con file descriptors o utilizamos la interfaz que nos provee el tipo FILE. En la materia usaremos el segundo.
+
+Funciones importantes:
+
+- [`FILE* fopen(const char* filepath, const char* mode);`](https://www.cplusplus.com/reference/cstdio/fopen/)
+- [`size_t fread(void* ptr, size_t size, size_t count, FILE* fp );`](https://www.cplusplus.com/reference/cstdio/fread/)
+- [`size_t fwrite(const void* ptr, size_t size, size_t count, FILE* fp );`](https://www.cplusplus.com/reference/cstdio/fwrite)
+- [`int fseek(FILE* fp, long int offset, int origin);`](https://www.cplusplus.com/reference/cstdio/fseek/)
+- [`int ftell(FILE* fp);`](https://www.cplusplus.com/reference/cstdio/ftell/)
+- [`void rewind(FILE* fp);`](https://www.cplusplus.com/reference/cstdio/rewind/)
+- [`int getc(FILE* fp);`](https://www.cplusplus.com/reference/cstdio/getc/)
+- [`int putc(FILE* fp);`](https://www.cplusplus.com/reference/cstdio/putc/)
+- [`char* fgets(const char* str, int n, FILE* fp);`](https://www.cplusplus.com/reference/cstdio/fgets/)
+- [`int fputs(const char* str, FILE* fp);`](https://www.cplusplus.com/reference/cstdio/fputs/)
+- [`int feof(FILE* fp);`](https://www.cplusplus.com/reference/cstdio/feof/)
+- [`int ftruncate(FILE* fp, long int offset);`](https://linux.die.net/man/2/ftruncate)
+- [`int fclose(FILE* fp);`](https://www.cplusplus.com/reference/cstdio/fclose/)
+
+Los modos de apertura de archivos en C son los siguientes:
+
+- `r`: Lectura. El archivo debe existir.
+- `w`: Escritura. Crea el archivo si no existe, de lo contrario lo sobreescribe.
+- `a`: Escritura al final. Crea el archivo si no existe.
+- `r+`: Lectura y escritura al principio. El archivo debe existir.
+- `w+`: Lectura y escritura. Sobreescribe el archivo si existe.
+- `a+`: Lectura y escritura al final del mismo.
+- `b`: Para que se trabajen sobre archivos binarios.
+- `t`: Para archivos de texto.
