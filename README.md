@@ -6,12 +6,38 @@ Este resumen junta información relevante dictada durante las clases para la pre
 # Tabla de Contenidos
 
 - [Clase 1](#clase-1)
+  - [Memoria](#memoria)
+  - [Structs & Unions](#structs-&-unions)
+  - [Ajuste de Endianness](#ajuste-de-endianness)
+  - [Segmentos de Memoria](#segmentos-de-memoria)
+  - [Lifetime y Scope](#lifetime-y-scope)
 - [Clase 2](#clase-2)
+  - [Sockets](#sockets)
+  - [Manejo de Archivos](#manejo-de-archivos)
 - [Clase 3](#clase-3)
+  - [RAII](#raii)
+  - [Pasajes De Objetos en C++](#pasajes-de-objetos-en-c++)
+  - [POO en C++](#poo-en-c++)
+    - [Keywords](#keywords)
+    - [Herencia, Clases Abstractas e Interfaces](#herencia,-clases-abstractas-e-interfaces)
+    - [Polimorfismo](#polimorfismo)
 - [Clase 4](#clase-4)
+  - [Programación Multihilo](#programación-multihilo)
+    - [Diferencias entre Procesos e Hilos](#diferencias-entre-procesos-e-hilos)
+  - [Mutex & Locks](#mutex-&-locks)
 - [Clase 5](#clase-5)
+  - [STL](#stl)
+  - [Sobrecarga de Operadores](#sobrecarga-de-operadores)
+  - [Templates](#templates)
 - [Clase 6](#clase-6)
+  - [Manejo de Errores](#manejo-de-errores)
+  - [Modelo Cliente-Servidor](#modelo-cliente-servidor)
+  - [Programación Orientada a Eventos](#programación-orientada-a-eventos)
 - [Clase 7](#clase-7)
+  - [SDL](#sdl)
+- [Clase 8](#clase-8)
+  - [Namespaces](#namespaces)
+  - [Friendship](#friendship)
 
 
 # Clase 1
@@ -108,7 +134,7 @@ Decimos que C/C++ son lenguajes portables pues estos pueden crear código ejecut
 
 El proceso de compilación tiene varias etapas:
 
-***Precompilación***: Se realizan tareas relacionadas con el reemplazo de variables, búsqueda de código fuente y un parseo de texto general. Todo lo que tiene que ver con manejo de archivos, headers, etc se resuelve acá. Si compilamos en C, solo le llegarán `.c` a la etapa de compilación. Reemplaza en el código los defines correspondientes, en función de las reglas definidas por los rótulos dados (`include, ifndef, define, ifdef, endif, ...`).
+***Precompilación***: Se realizan tareas relacionadas con el reemplazo de variables, búsqueda de código fuente y un parseo de texto general. Todo lo que tiene que ver con manejo de archivos, headers, etc se resuelve acá. Si compilamos en C, solo le llegarán `.c` a la etapa de compilación. Reemplaza en el código los defines correspondientes, en función de las reglas definidas por los rótulos dados (`include, ifndef, define, ifdef, endif, ...`, todas instrucciones del precompilador). 
 
 ***Compilación***: Verificación del código suministrado. Genera un código objeto. Los `.c` que reciben se transforman en `.o` & `.lib`.
 
@@ -133,6 +159,8 @@ Para cerrar un canal de comunicación, lectura y/o escritura, se utiliza el [`sh
 Envia bytes, nunca streams. Además asegura que siempre llega la información sin bytes repetidos y respetando el orden de salida. 
 
 Para satisfacer el protocolo correctamente debemos utilizar sockets, los cuales están diferenciados por su file descriptor. 
+
+Existen muchos más protocolos relacionados con la comunicación web, como el DNS, HTTP(S), etc.
 
 ## Manejo de Archivos
 
@@ -185,17 +213,273 @@ void D(Class&& obj);
 
 - `B` recibe por puntero, es decir, al scope entra la dirección de memoria donde existe el objeto. Siempre pesa que lo que pesa un puntero y evita llamadas innecesarias al destructor.
 
-- `C` pasa por referencia
+- `C` pasa por referencia. Las referencias son como punteros que _siempre deben estar inicializados y no pueden cambiar el lugar a donde apuntan_. No puedo asignar memoria para una referencia sin inicializarla.
 
-- `D` pasa por movimiento
+- `D` pasa por movimiento. El método toma el ownership del objeto que recibe. En los constructores se tiende a deshabilitar el objeto entrante para desplazar el ownership del mismo a nuestro nuevo objeto.
 
 ## POO en C++
 
+### Keywords
+
+La keyword const al final de un método implica que el mismo es solo de lectura. No modifica los datos del objeto. Por ejemplo resulta útil para llamar a los métodos de un objeto `const`.
+
+Para deshabilitar un método de una clase debemos introducir `delete` al final del mismo. Esto es útil, por ejemplo, para evitar que se llame a algún constructor por copia "sin querer".
+
+La keyword `virtual` nos deja hacer que un método sea abstracto. Se escribe al principio de la firma del método. Agrega el método a la _vtable_ (que redirecciona internamente a los métodos virtuales a las posiciones de memoria donde se encuentran los otros métodos que la implementan, siempre en función del tipo al que apuntamos).
+
+Si un método debe si o si implementarse sobre alguno abstracto, podemos agregar `override` al final de la firma del mismo para que el compilador se fije si implementa alguna función de la vtable.
+
+Para que un método sea de clase añadimos `static` al principio de la firma del mismo.
+
+### Herencia, Clases Abstractas e Interfaces
+
+- No se pueden heredar constructores, sobrecargas de y friends.
+
+- Para que un método sea puramente abstracto debemos hacer que tenga `virtual` al inicio de la firma (así tiene una entrada en la _vtable_) y lo igualamos a cero.
+
+- Las interfaces deben tener todos sus métodos puramente abstractos. No son instanciables.
+
+- Es muy importante tener en cuenta que _si el destructor tiene que ser abstracto, ***debe*** tener `virtual`._ Esto resulta ser crítico pues si heredamos de una clase que no hace nada en el destructor y nosotros como hijos hacemos RAII para nuestros propios recursos, puede pasar que no se liberen los mismos.
+
+- Si heredamos de una clase, instanciamos al padre y en el lugar del padre metemos a una variable hija, es decir la heredera, puede ocurrir que el tamaño de la hija supere al del padre. Esto hace que las llamadas polimórficas no se activen, pues a la hija se le deben quitar los accesorios que implementó sobre el padre para que pueda encastrar en el pedazo de memoria del mismo. A este problema se lo conoce como _object slicing_. Una buena forma de solucionarlo es usando referencias o punteros, que siempre ocupan el mismo espacio. 
+También se puede manifestar este valor en el pasaje por parámetros.
+
+- Se conoce como _problema del diamante_ al caso donde una clase A es heredada por B y C, quienes a su vez son heredadas por D (si, C++ soporta herencia múltiple y solo debería hacerse si es contra interfaces). Esto puede hacer que si A tiene algún atributo e instanciamos a D, este no sabrá si usar al atributo de B o C. El compilador se encargará de levantar el error correspondiente.
+
+### Polimorfismo
+
+Ejemplo de polimorfismo con herencia:
+
+```
+class Father {
+  public:
+    void method() {
+      std::cout << "Base" << std::endl;
+    }
+};
+
+class Son : public Father {
+  public:
+    void method() {
+      std::cout << "Son" << std::endl;
+      // Podría decorar al método del hijo con el del padre:
+      // Father::method();
+    }
+};
+
+class VirtualFather {
+  public:
+    void method() {
+      std::cout << "Base" << std::endl;
+    }
+};
+
+class VirtualSon : public VirtualFather {
+  public:
+    virtual void method() override {
+      std::cout << "Son" << std::endl;
+    }
+};
+
+Father* f;
+Son s;
+VirtualFather* vf;
+VirtualSon vs;
+f = &s;
+vf = &vs;
+f->method();   // Prints "Base"
+vf->method();  // Prints "Son"
+```
+
+La resolución de problemas dinámicos de la vtable se la conoce como `Late Binding` o `Dynamic Binding`. De lo contrario, si se resuelve en la compilación, se lo conoce como `Static Binding`.
+
 # Clase 4
+
+## Programación Multihilo
+
+En las arquitecturas de las máquinas que utilizamos podemos darnos cuenta que la ejecución de un proceso que dura un tiempo determinado, hace que la máquina tenga que trabajar durante ese tiempo completo. Pero eso no necesariamente implica que la CPU va a estar computando valores durante todo ese tiempo; es más, puede ocurrir que ciertas operaciones lentas representen la mayoría del tiempo requerido por estos procesos. Esto hace que desperdiciemos tiempo de cómputo de la CPU. Para evitar esto se hace multitasking, donde el kernel, con su _Scheduler_ corran de forma concurrente. 
+
+Y concurrente no significa paralelo. Es concurrente, pues el Scheduler selecciona constantemente que proceso tiene acceso a la CPU, haciendo que la ejecución de cada uno de estos se transforme en una ejecución de a ráfagas más rápidas. Solo cambiamos la forma en que procesamos datos y esto no implica tener una ventaja temporal, hasta que pensamos en lo dicho en el parrafo anterior. Muchas veces estos cambios que realiza el Scheduler, hace que mientras un proceso que tarda (por ejemplo con la espera a una búsqueda en memoria) y está ocupando la CPU haciendo nada, pueda ser desalojado un rato por otro que aproveche y compute datos.
+
+Estos saltos entre actores que ocupan el CPU por el sistema operativo se lo conoce como _context switching_.
+
+Un proceso puede estar en los siguientes estados:
+
+- Inicialización
+- Espera a la CPU
+- Utilizacón de CPU
+- Bloqueados (por I/O, etc)
+- Completados
+
+El paralelismo real se realiza con los cores del procesador. A estos hilos se los conoce como _hilos pesados, heavy o del kernel_. Los _hilos verdes o de usuario_ a diferencia del resto, está controlado por un pseudo-scheduler y es este mismo el que decide que proceso entra o no en el hilo del kernel, el real. El context switching de estos pseudo-scheduler está delegado por el context switching del OS; le sacamos peso de encima, pero no le permite realizar tareas realmente paralelas.
+
+### Diferencias entre Procesos e Hilos
+
+Cada proceso puede compartir simplemente su code segment.
+
+Los hilos en cambio, comparten el code segment, el heap, el data segment y los file descriptors. Todos estos están separados para los procesos.
+
+Los dos no tienen acceso al stack y registros de sus compañeros.
+
+## Mutex & Locks
+
+Como diferentes hilos pueden acceder al mismo grupo de variables, esto puede introducir condiciones de carrera, es decir, se pierde el orden de instrucciones ejecutadas. Para mantener al mismo y asegurar la atomicidad de la ejecución, se introducen los mutex. Estos permiten realizar un lock sobre un segmento de código; si un hilo bloquea cierto segmento de código, ningún otro podrá entrar hasta que el primero lo desbloquee. Si esto último no ocurre, estaremos en presencia de un _deadlock_.
+
+En C++ podemos bloquear un hilo con [`std::mutex`](https://www.cplusplus.com/reference/mutex/mutex/), el cual requiere un lock y unlock (debemos minimizar las llamadas a estos dentro de los métodos y funciones para evitar deadlocks inesperados). También se puede utilizar [`std::unique_lock`](https://www.cplusplus.com/reference/mutex/unique_lock/) (el cual brinda la ventaja de ser RAII pues, al salir del scope donde hace el lock, termina haciendo el unlock automaticamente).
 
 # Clase 5
 
+## Templates
+
+En C/C++ podemos hacer algo parecido a los templates aprovechando la magia del precompilador:
+
+```
+#define MAKE_ARRAY_STRUCT(TYPE) \\
+  class Array_##TYPE { \\
+    TYPE data[64]; \\
+    void set(int p, TYPE v) { data[p] = v; } \\
+    TYPE get(int p) { return data[p]; } \\
+  } 
+```
+
+Y con templates:
+
+```
+template<class T>
+class Array {
+  T data[64];
+  void set(int p, T t) { data[p] = t; }
+  T get(int p) { return data[p];}
+}
+```
+
+Podemos crear objetos personalizados. Acepta tanto tipos primitivos como clases propias.
+
+También acepta más de un token y puede tener un valor por default:
+
+```
+template<class T, class U>
+class Dupla {
+  T t;
+  U u;
+}
+
+template<class T=char, int size=64>
+class ArrayVariable {
+  T data[size];
+}
+```
+
+Si quiero que cuando el tipo del template sea uno en particular, se le pueda hardocodear la implementación de la siguiente forma:
+
+```
+template<class T>
+class Array { ... }
+
+template<>
+class Array<bool> { ... }
+// Si T == bool → definí a la clase Array booleana de la forma que te hardcodeo acá.
+```
+
+Este estilo de programación es conocida como programación genérica. 
+
+## Sobrecarga de Operadores
+
+Supongamos que tenemos las instancias `x1`, `x2` y queremos operar sobre ellas de la siguiente forma `x1 <OP> x2`. Esto en C++ se puede representar así:
+
+```
+R resultado = x1 <OP> x2;
+R resultado = x1.operator<OP>(x2);
+```
+
+Y definir así:
+
+```
+R operator<OP>(const X& other) const {...}
+```
+
+Otros ejemplos particulares son:
+
+
+```
+class Complex {
+  
+  public:
+
+  float re, im;
+
+  Complex(float re, float im) : re(re), im(im) {}
+
+  Complex& operator=(const Complex& other) {
+    if (this != &other) {
+      this->re = other.re;
+      this->im = other.im;
+    }
+    return *this;
+  }
+
+  Complex operator+(const Complex& other) const {
+    Complex resultado(this->re + other.re, this->im + other.im);
+    return resultado;
+  }
+
+  // Sobrecargar un casteo implica que no es necesario decir el tipo que devuelve pues es obvio. 
+  operator float() const {
+    return sqrt(this->re * this->re + this->im - this->im);
+  }
+
+};
+```
+
+Se conoce como _functor_ a la llamada del `operator()`.
+
+## STL
+
+Esta librería, haciendo uso de templates, implementa, entre otras cosas, un conjunto importantísimo y extenso de estructuras de datos. Es muy recomendable trabajar con estas y no con cualquier implementación personal la cual no está sujeta a las optimizaciones que la STL pueda realizar.
+
 # Clase 6
+
+## Manejo de Errores
+
+La keyword `throw` permite lanzar cualquier cosa como una excepción. Esto, o la aparición natural de una excepción para la ejecución del programa para hacer [_bubble up_](https://teamtreehouse.com/community/whats-meant-by-bubbling). Una forma óptima de atrapar excepciones es con un bloque [_try-catch_](https://en.cppreference.com/w/cpp/language/try_catch):
+
+```
+try {
+  doStuffWithSockets();
+} catch (SocketException& e) {
+  return;
+} catch (std::exception& e) {
+  std::cerr << e.what() << std::endl;
+} catch (...) {
+  std::cerr << "Unkown error" << std::endl;
+}
+```
+
+En el ejemplo vemos que pueden pasar varias cosas. Si se levanta una `SocketException` (que por ejemplo represente que me cerraron un socket que acepté) no hago nada y termino la ejecución. Si atrapo una `std::exception` o algo que herede de esto imprimo la descripción del mismo. Finalmente mantengo un catch genérico para cualquier cosa que escape a eso.
+
+Es útil meter uno de estos bloques por cada hilo que lanzo y en las "capas superiores" de nuestro hilo principal.
+
+Para evitar tener errores con la devolución de recursos en un bloque catch, hacemos uso del patrón RAII. Wrappeamos todo pedido de recursos en el constructor de una clase y la liberación en el destructor para asegurar que este último se llamará automaticamente al salir del try. Este mismo truco se puede realizar para wrappear objetos que pueden evitar tener estas fallas en el constructor de un objeto (pues ahí no se llamaría al destructor).
+
+Una api es _exception safe strong_ si es resistente a excepciones, es decir, está bien preparado para lidiar con estas. De lo contrario es _exception safe weak_.
+
+## Modelo Cliente-Servidor
+
+Este patrón se utiliza para establecer comunicaciones desde el servidor hacia varios clientes.
+
+Digamos que para cierto momento n clientes conectados a nuestro server, por lo tanto nuestro modelo propone lanzar n+2 hilos.
+
+![Servidor manejando varios clientes](/img/clientserverpattern.png)
+
+El primero será el hilo principal. Este tendrá algún objeto que pueda lanzar al segundo hilo. Este será el hilo con el socket aceptador por cada cliente que recibe lanza un hilo para lidiar con ellos. El destructor debe tener un recolector de basura que elimina los recursos y cierra los hilos y sockets individuales. El hilo principal, cuando se de cuenta de que debe cerrar al aceptador, se llama a su destructor, cierra las conexiones y libera todos los recursos.
+
+## Programación Orientada a Eventos
+
+Podríamos definir a cada evento como un suceso cuya aparición ante el sistema es aleatorio. Esto hace que, si nuestro código trabaja con estos eventos, tengamos que estar esperando constantemente a que alguno se manifieste. Esto intuitivamente se puede hacer utilizando mezclas entre concurrencia y estructuras de datos.
+
+Un buen ejemplo es el de la cola de eventos. La misma apila objetos que representen eventos a medida que van entrando y con un mutex los sacamos manteniendo el orden. 
+
+Es además muy útil con el controlador del patrón MVC y hacer las verificaciones de eventos lo más rápido y sencillo posible.
 
 # Clase 7
 
