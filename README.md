@@ -269,14 +269,14 @@ class Son : public Father {
 
 class VirtualFather {
   public:
-    void method() {
+    virtual void method() {
       std::cout << "Base" << std::endl;
     }
 };
 
 class VirtualSon : public VirtualFather {
   public:
-    virtual void method() override {
+    void method() override {
       std::cout << "Son" << std::endl;
     }
 };
